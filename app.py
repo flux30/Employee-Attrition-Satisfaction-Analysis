@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from datetime import datetime
 import uuid
 import os
@@ -109,15 +109,20 @@ def develop_models(df):
     # Split the data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Random Forest Classifier
-    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf_model.fit(X_train, y_train)
+    # Scale numerical features
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    
+    # Random Forest Classifier with balanced class weights
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
+    rf_model.fit(X_train, y_train)  # Random Forest doesn't need scaled data
     rf_predictions = rf_model.predict(X_test)
     
-    # Logistic Regression
-    lr_model = LogisticRegression(max_iter=1000, random_state=42)
-    lr_model.fit(X_train, y_train)
-    lr_predictions = lr_model.predict(X_test)
+    # Logistic Regression with scaled data and balanced class weights
+    lr_model = LogisticRegression(max_iter=2000, random_state=42, class_weight='balanced')
+    lr_model.fit(X_train_scaled, y_train)
+    lr_predictions = lr_model.predict(X_test_scaled)
     
     # Print model performance
     print("Random Forest Classification Report:")
